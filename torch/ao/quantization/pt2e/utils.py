@@ -710,7 +710,7 @@ def _replace_node_literals_with_existing_placeholders(
         arg_map = _node_arg_map.get(_node.name)
         if not arg_map:
             return None
-        
+
         # get the node's schema if it exists.
         target = getattr(_node, 'target', None)
         if not target:
