@@ -52,9 +52,9 @@ class LayerNormPattern(torch.nn.Module):
 # 
 # This corresponds to LayerNormPattern.
 LN_PATTERN_LITERAL_MAP = {
-    'aten::layer_norm': {           # the node for which this replacement applies
-        1: 'normalized_shape',      # <node_arg_idx> -> <op_placeholder_name> mapping.
-        4: 'eps',
+    'layer_norm': {                                 # the node name for which this replacement applies
+        'normalized_shape': 'normalized_shape',     # <node_argument> -> <op_placeholder_name> mapping.
+        'eps': 'eps',
     }
 }
 
@@ -94,9 +94,9 @@ class LayerNormReplacement(torch.nn.Module):
 # Define the mapping between a node's arguments and its corresponding placeholder nodes.
 #
 LN_REPL_LITERAL_MAP = {
-    'my_lib::my_layer_norm': {     # the node (call_function) for which this replacement applies
-        1: 'normalized_shape',     # <node_arg_idx> -> <op_placeholder_name> mapping.
-        4: 'eps',
+    'my_layer_norm': {              # the node (call_function) for which this replacement applies
+        'normalized_shape': 'normalized_shape',      # <node_arg_idx> -> <op_placeholder_name> mapping.
+        'eps': 'eps',
     }
 }
 

@@ -703,19 +703,30 @@ def _replace_node_literals_with_existing_placeholders(
         _node_arg_map.
         """
 
-        # must be a target with a name (not a built-in).
-        name_fn = getattr(_node.target, 'name', None)
-        if not name_fn:
-            return None
+        # get the node's name.
+        name_fn = _node.name
 
         # the _node must have an entry in the _node/arg.
-        arg_map = _node_arg_map.get(name_fn())
+        arg_map = _node_arg_map.get(_node.name)
         if not arg_map:
             return None
+        
+        # get the node's schema if it exists.
+        target = getattr(_node, 'target', None)
+        if not target:
+            return None
+        schema = getattr(_node.target, '_schema', None)
+        if not schema:
+            return None
 
+        # get the schema name corresponding to the argument.
+        assert len(schema.arguments) > _arg_idx
+        schema_match = schema.arguments[_arg_idx].name
+
+        # check for a schema match with the argument dict.
         # if an entry exist, check if there is a index match. 
         # - if so return it, else return None.
-        entry = arg_map.get(_arg_idx)
+        entry = arg_map.get(schema_match)
         if not entry:
             return None
 
@@ -723,7 +734,7 @@ def _replace_node_literals_with_existing_placeholders(
         assert _is_literal(_node.args[_arg_idx]), f"{_node.name}'s argument is not a literal!"
 
         # mark this node as replaced in the replacement map.
-        repl_map[name_fn()][_arg_idx] = True
+        repl_map[name_fn][entry] = True
 
         return entry
 
