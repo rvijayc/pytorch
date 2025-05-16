@@ -4,7 +4,7 @@ import logging
 
 import torch
 from torch.fx.passes.graph_drawer import FxGraphDrawer
-from torch.ao.quantization.pt2e.utils import _replace_node_literals_with_existing_placeholders
+from torch.ao.quantization.pt2e.utils import replace_node_literals_with_existing_placeholders
 from torch.fx.subgraph_rewriter import replace_pattern
 from torch.testing._internal.common_utils import TestCase
 
@@ -52,9 +52,9 @@ class LayerNormPattern(torch.nn.Module):
 # 
 # This corresponds to LayerNormPattern.
 LN_PATTERN_LITERAL_MAP = {
-    'aten::layer_norm': {           # the node for which this replacement applies
-        1: 'normalized_shape',      # <node_arg_idx> -> <op_placeholder_name> mapping.
-        4: 'eps',
+    'aten::layer_norm': {                           # the node for which this replacement applies
+        'normalized_shape': 'normalized_shape',     # <node_argument> -> <op_placeholder_name> mapping.
+        'eps': 'eps',
     }
 }
 
@@ -94,9 +94,9 @@ class LayerNormReplacement(torch.nn.Module):
 # Define the mapping between a node's arguments and its corresponding placeholder nodes.
 #
 LN_REPL_LITERAL_MAP = {
-    'my_lib::my_layer_norm': {     # the node (call_function) for which this replacement applies
-        1: 'normalized_shape',     # <node_arg_idx> -> <op_placeholder_name> mapping.
-        4: 'eps',
+    'mylib::my_layer_norm': {                        # the node (call_function) for which this replacement applies
+        'normalized_shape': 'normalized_shape',      # <node_arg_idx> -> <op_placeholder_name> mapping.
+        'eps': 'eps',
     }
 }
 
@@ -110,12 +110,12 @@ class TestLayerNormRepl(TestCase):
         # create and compile patterns and replacements.
         pattern_model = LayerNormPattern()
         cls.pattern_gm = torch.export.export(pattern_model, cls.example_inputs).module()
-        _replace_node_literals_with_existing_placeholders(cls.pattern_gm, LN_PATTERN_LITERAL_MAP)
+        replace_node_literals_with_existing_placeholders(cls.pattern_gm, LN_PATTERN_LITERAL_MAP)
         # to_svg(cls.pattern_gm, 'pattern_before.svg')
 
         repl_model = LayerNormReplacement()
         cls.repl_gm = torch.export.export(repl_model, cls.example_inputs).module()
-        _replace_node_literals_with_existing_placeholders(cls.repl_gm, LN_REPL_LITERAL_MAP)
+        replace_node_literals_with_existing_placeholders(cls.repl_gm, LN_REPL_LITERAL_MAP)
         # to_svg(cls.repl_gm, 'replacement.svg')
 
     def run_layernorm_repl(self, model_gm: torch.nn.Module):

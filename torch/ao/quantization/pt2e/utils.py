@@ -19,6 +19,7 @@ from torch.utils._pytree import LeafSpec
 __all__ = [
     "fold_bn_weights_into_conv_node",
     "remove_tensor_overload_for_qdq_ops",
+    "replace_node_literals_with_existing_placeholders"
 ]
 
 _QUANTIZE_OPS = [
@@ -580,7 +581,7 @@ def _replace_literals_with_existing_placeholders(
         node.args = new_args
     return gm
 
-def _replace_node_literals_with_existing_placeholders(
+def replace_node_literals_with_existing_placeholders(
     gm: torch.fx.GraphModule,
     node_arg_map: Dict[str, Dict[int, str]]
 ):
@@ -683,9 +684,22 @@ def _replace_node_literals_with_existing_placeholders(
         if not arg_map:
             return None
 
+        # get the node's schema if it exists.
+        target = getattr(_node, 'target', None)
+        if not target:
+            return None
+        schema = getattr(_node.target, '_schema', None)
+        if not schema:
+            return None
+
+        # get the schema name corresponding to the argument.
+        assert len(schema.arguments) > _arg_idx
+        schema_match = schema.arguments[_arg_idx].name
+
+        # check for a schema match with the argument dict.
         # if an entry exist, check if there is a index match. 
         # - if so return it, else return None.
-        entry = arg_map.get(_arg_idx)
+        entry = arg_map.get(schema_match)
         if not entry:
             return None
 
